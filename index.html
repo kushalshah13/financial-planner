@@ -726,14 +726,14 @@
                     <h3>📄 AI-Powered Document Analysis</h3>
                     <p>Upload bank statements, salary slips, or insurance docs - AI will extract and fill everything</p>
                     
-                    <div class="input-group" style="margin-top: 16px;">
+                    <div class="input-group" id="apiKeySection" style="margin-top: 16px;">
                         <div class="input-label" style="color: white;">
                             <span>Your Claude API Key (Required for AI)</span>
                             <span class="info-icon" style="border-color: white; color: white;">i</span>
-                            <div class="tooltip">Get your API key from console.anthropic.com. It's stored only in your browser session and never sent to our servers. Free tier includes $5 credit.</div>
+                            <div class="tooltip">Get your API key from console.anthropic.com. It's stored only in your browser session and never sent to our servers. Free tier includes $5 credit. Or the site owner may have embedded a key for demo purposes.</div>
                         </div>
                         <div style="display: flex; gap: 8px;">
-                            <input type="password" id="apiKey" placeholder="sk-ant-..." style="flex: 1; background: white; color: #333;">
+                            <input type="password" id="apiKey" placeholder="sk-ant-... (or embedded by site)" style="flex: 1; background: white; color: #333;">
                             <button class="upload-btn" onclick="clearAPIKey()" style="padding: 10px 16px; background: #dc3545; color: white;">
                                 Clear
                             </button>
@@ -1134,6 +1134,22 @@
         let uploadedDocuments = [];
         let extractedData = {};
         
+        // ⚠️ EMBEDDED API KEY OPTION - READ CAREFULLY!
+        // 
+        // OPTION 1 (EASY BUT RISKY): Embed your API key here
+        // - Replace '' with your actual API key: 'sk-ant-xxxxx'
+        // - Users won't need to enter a key
+        // - ⚠️ WARNING: Anyone can see this key in browser source code!
+        // - ⚠️ They can steal it and use your credits
+        // - ✅ PROTECTION: Set a LOW spending limit ($5-10) at console.anthropic.com
+        // - ✅ Monitor usage daily and regenerate if abused
+        //
+        // OPTION 2 (SECURE): Leave this empty and require users to enter their own key
+        // - More friction but completely secure
+        // - No risk to your account
+        //
+        const EMBEDDED_API_KEY = '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'; // ← Paste your key here or leave empty
+        
         function clearAPIKey() {
             document.getElementById('apiKey').value = '';
             sessionStorage.removeItem('claude_api_key');
@@ -1143,7 +1159,16 @@
         
         // Load API key from session if exists
         window.addEventListener('load', function() {
-            // Check for API key in URL parameter (for easy personal use)
+            // Priority 1: Check for embedded key
+            if (EMBEDDED_API_KEY) {
+                sessionStorage.setItem('claude_api_key', EMBEDDED_API_KEY);
+                document.getElementById('apiKey').value = EMBEDDED_API_KEY;
+                // Hide the API key input section since it's embedded
+                document.getElementById('apiKey').parentElement.parentElement.style.display = 'none';
+                return;
+            }
+            
+            // Priority 2: Check for API key in URL parameter (for easy personal use)
             const urlParams = new URLSearchParams(window.location.search);
             const keyFromUrl = urlParams.get('key');
             
@@ -1153,7 +1178,7 @@
                 // Remove key from URL for privacy
                 window.history.replaceState({}, document.title, window.location.pathname);
             } else {
-                // Load from session if exists
+                // Priority 3: Load from session if exists
                 const savedKey = sessionStorage.getItem('claude_api_key');
                 if (savedKey) {
                     document.getElementById('apiKey').value = savedKey;
